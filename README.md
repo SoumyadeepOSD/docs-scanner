@@ -15,3 +15,11 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 # docs-scanner
+
+## Custome scanning app for Android made using Flutter. 
+
+### Get best experience while using it in your mobile. It's currently in version 1.0.0
+
+More Features will be integrated soon!
+
+
