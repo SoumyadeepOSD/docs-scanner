@@ -99,7 +99,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     FloatingActionButton(
                       onPressed: () async {
                         if (widget.controller.value.isTakingPicture) {
-                          return null;
+                          return;
                         }
                         try {
                           await widget.controller.setFlashMode(isFlashTurnedOn
@@ -111,7 +111,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           });
                         } on CameraException catch (e) {
                           debugPrint("Error occured while taking picture: $e");
-                          return null;
+                          return;
                         }
                       },
                       child: const Icon(Icons.camera_alt_outlined),

@@ -11,30 +11,26 @@ class FileSelectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      child: Align(
-        alignment: Alignment.bottomRight,
-        child: SizedBox(
-          height: 150,
-          child: Column(
-            children: [
-              FloatingActionButton(
-                child: const Icon(Icons.camera),
-                onPressed: () {
-                  pickImagesFromCamera();
-                },
-              ),
-              const SizedBox(
-                height: 10.0,
-              ),
-              FloatingActionButton(
-                child: const Icon(Icons.photo),
-                onPressed: () {
-                  pickImagesFromGalary();
-                },
-              ),
-            ],
+      height: 100,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          FloatingActionButton(
+            child: const Icon(Icons.camera),
+            onPressed: () {
+              pickImagesFromCamera();
+            },
           ),
-        ),
+          const SizedBox(
+            height: 10.0,
+          ),
+          FloatingActionButton(
+            child: const Icon(Icons.photo),
+            onPressed: () {
+              pickImagesFromGalary();
+            },
+          ),
+        ],
       ),
     );
   }
