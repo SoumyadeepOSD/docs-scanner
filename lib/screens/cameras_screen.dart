@@ -5,15 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CameraScreen extends StatefulWidget {
-  const CameraScreen({super.key, required this.controller});
-  final CameraController controller;
+  const CameraScreen(
+      {Key? key, required this.controller, required this.onImagesTaken})
+      : super(key: key);
 
+  final CameraController controller;
+  final void Function(List<XFile> images) onImagesTaken;
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
   bool isFlashTurnedOn = false;
+  List<XFile>? selectedCameraImages = [];
+
+  void _handleImagesTaken(List<XFile> images) {
+    widget.onImagesTaken(images);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +34,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 height: double.infinity,
                 child: CameraPreview(widget.controller),
               ),
-              if (value.selectedCameraImages!.isNotEmpty)
+              if (selectedCameraImages!.isNotEmpty)
                 Positioned(
                   bottom: 100,
                   child: Container(
@@ -35,14 +43,14 @@ class _CameraScreenState extends State<CameraScreen> {
                     width: MediaQuery.of(context).size.width,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: value.selectedCameraImages!.length,
+                      itemCount: selectedCameraImages!.length,
                       itemBuilder: (context, index) {
                         return Stack(
                           children: [
                             Container(
                               margin: const EdgeInsets.all(5),
                               child: Image.file(
-                                File(value.selectedCameraImages![index].path),
+                                File(selectedCameraImages![index].path),
                                 height: 100,
                                 width: 100,
                                 fit: BoxFit.cover,
@@ -53,7 +61,9 @@ class _CameraScreenState extends State<CameraScreen> {
                               right: 0,
                               child: GestureDetector(
                                 onTap: () {
-                                  value.removeCameraImages(index);
+                                  setState(() {
+                                    selectedCameraImages?.removeAt(index);
+                                  });
                                 },
                                 child: Container(
                                   decoration: const BoxDecoration(
@@ -105,7 +115,10 @@ class _CameraScreenState extends State<CameraScreen> {
                                 : FlashMode.off);
                             XFile picture =
                                 await widget.controller.takePicture();
-                            value.setCameraImages(picture);
+                            setState(() {
+                              selectedCameraImages?.add(picture);
+                            });
+                            _handleImagesTaken([picture]);
                           } on CameraException catch (e) {
                             debugPrint(
                                 "Error occured while taking picture: $e");
@@ -116,9 +129,10 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                       FloatingActionButton(
                         key: const Key('doneButton'),
+                        heroTag: "btn4",
                         backgroundColor: Colors.green,
                         onPressed: () {
-                          value.setImages();
+                          value.setGalaryImages(selectedCameraImages!);
                           Navigator.of(context).pop();
                         },
                         child: const Text(
