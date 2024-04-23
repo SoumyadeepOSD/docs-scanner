@@ -1,12 +1,11 @@
 // ignore_for_file: prefer_is_empty
-
 import 'dart:io';
 import 'dart:ui';
 import 'package:camera/src/camera_controller.dart';
 import 'package:docs_scanner/components/blankfile.dart';
 import 'package:docs_scanner/components/file_selection_buttons.dart';
-import 'package:docs_scanner/components/image_filters.dart';
-import 'package:docs_scanner/providers/camera_image_provider.dart';
+import 'package:docs_scanner/components/image_filters_component.dart';
+import 'package:docs_scanner/providers/state_providers.dart';
 import 'package:docs_scanner/screens/cameras_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -28,10 +27,10 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final ImagePicker picker = ImagePicker();
-  late List<XFile>? _selectedImages = [];
+  late List<XFile> _selectedImages = [];
   var filterIndex = 0;
 
-  void pickImagesFromGalary() async {
+  void pickImagesFromGalary({value}) async {
     try {
       final List<XFile> images = await picker.pickMultiImage();
       if (images.isNotEmpty) {
@@ -44,29 +43,22 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void pickImagesFromCamera() async {
+  void pickImagesFromCamera({value}) async {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CameraScreen(
           controller: widget.controller,
-          removeImage: removeImage,
         ),
       ),
     );
-  }
-
-  void removeImage(int index) {
-    setState(() {
-      _selectedImages!.removeAt(index);
-    });
   }
 
   Future<Uint8List> buildPdf(PdfPageFormat format) async {
     // Create the Pdf document
     final pw.Document pdf = pw.Document();
     final List<String> images =
-        _selectedImages!.map((image) => image.path).toList();
+        _selectedImages.map((image) => image.path).toList();
 
     // Calculate the maximum height of the content on a single page
     final double maxHeight = format.availableHeight - 40; // Adjust as needed
@@ -118,12 +110,6 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Consumer<CameraImageProvider>(
       builder: (context, value, child) {
-        List<XFile> newImages = value.selectedImages!
-            .where((image) => !_selectedImages!
-                .map((selectedImage) => selectedImage.path)
-                .contains(image.path))
-            .toList();
-        _selectedImages = [..._selectedImages!, ...newImages];
         return Scaffold(
           appBar: AppBar(
             title: const Text(
@@ -153,10 +139,11 @@ class _HomeState extends State<Home> {
                               pickImagesFromCamera: pickImagesFromCamera,
                               pickImagesFromGalary: pickImagesFromGalary,
                             ),
-                            _selectedImages!.length > 0
+                            // _selectedImages.length > 0
+                            value.selectedImages!.length > 0
                                 ? const ImageFiltersButtons()
                                 : const SizedBox(),
-                            _selectedImages!.length > 0
+                            value.selectedImages!.length > 0
                                 ? ElevatedButton(
                                     style: ButtonStyle(
                                         backgroundColor:
@@ -175,11 +162,11 @@ class _HomeState extends State<Home> {
                         ),
                       ),
                     ),
-                    _selectedImages!.length == 0
+                    value.selectedImages!.length == 0
                         ? const BlankFileComponent()
                         : Expanded(
                             child: ListView.builder(
-                              itemCount: _selectedImages!.length,
+                              itemCount: value.selectedImages!.length,
                               itemBuilder: (context, index) {
                                 return Container(
                                   padding: const EdgeInsets.all(10),
@@ -188,12 +175,10 @@ class _HomeState extends State<Home> {
                                       Positioned(
                                         top: 5,
                                         right: 5,
-                                        child: _selectedImages!.length > 0
+                                        child: value.selectedImages!.length > 0
                                             ? GestureDetector(
                                                 onTap: () {
-                                                  setState(() {
-                                                    removeImage(index);
-                                                  });
+                                                  value.removeImages(index);
                                                 },
                                                 child: Container(
                                                   decoration:
@@ -223,7 +208,7 @@ class _HomeState extends State<Home> {
                                           )),
                                           child: Image.file(
                                             File(
-                                              _selectedImages![index].path,
+                                              value.selectedImages![index].path,
                                             ),
                                             fit: BoxFit.cover,
                                           ),

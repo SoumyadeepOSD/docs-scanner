@@ -3,8 +3,7 @@ import 'package:docs_scanner/screens/cameras_screen.dart';
 import 'package:docs_scanner/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'providers/camera_image_provider.dart';
+import 'providers/state_providers.dart';
 
 late List<CameraDescription> _cameras;
 

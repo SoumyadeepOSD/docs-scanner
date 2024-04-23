@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../providers/camera_image_provider.dart';
+import '../providers/state_providers.dart';
 
 class ImageFiltersButtons extends StatefulWidget {
   const ImageFiltersButtons({Key? key}) : super(key: key);
