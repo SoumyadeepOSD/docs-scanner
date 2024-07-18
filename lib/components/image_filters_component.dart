@@ -10,7 +10,19 @@ class ImageFiltersButtons extends StatefulWidget {
 }
 
 class _ImageFiltersButtonsState extends State<ImageFiltersButtons> {
-  List<String> customColorfiltersNames = ["Normal", "Board", "90's", "Gray"];
+  List<String> customColorfiltersNames = [
+    "Normal",
+    "Board",
+    "90's",
+    "Gray",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G"
+  ];
   @override
   Widget build(BuildContext context) {
     return Consumer<CameraImageProvider>(

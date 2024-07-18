@@ -8,6 +8,9 @@ class BlankFileComponent extends StatelessWidget {
     return Container(
       child: const Column(
         children: [
+          SizedBox(
+            height: 50,
+          ),
           Icon(
             Icons.file_copy_outlined,
             size: 50,
@@ -16,7 +19,7 @@ class BlankFileComponent extends StatelessWidget {
           SizedBox(
             height: 10,
           ),
-          Text("Press + icon to select images"),
+          Text("Choose images to get started"),
         ],
       ),
     );

@@ -1,9 +1,12 @@
-import 'package:camera/camera.dart';
-import 'package:docs_scanner/screens/cameras_screen.dart';
-import 'package:docs_scanner/screens/home.dart';
-import 'package:flutter/material.dart';
+import 'package:docs_scanner/demo_file.dart';
+import 'package:docs_scanner/screens/onboarding/onboarding.dart';
+import 'package:docs_scanner/screens/splash_screen.dart';
+import 'package:docs_scanner/screens/home_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 import 'providers/state_providers.dart';
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 
 late List<CameraDescription> _cameras;
 
@@ -26,7 +29,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // This widget is the root of your application
   late CameraController controller;
 
   @override
@@ -61,14 +63,21 @@ class _MyAppState extends State<MyApp> {
     if (!controller.value.isInitialized) {
       return Container();
     }
-    return MaterialApp(
+    return ToastificationWrapper(
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: Home(controller: controller));
-    // home: CameraScreen(controller: controller));
+        routes: {
+          "/spash": (context) => const SplashScreen(),
+          "/onboarding": (context) => const Onboarding(),
+          "/home": (context) => const HomeScreen()
+        },
+        home: const SplashScreen(),
+      ),
+    );
   }
 }

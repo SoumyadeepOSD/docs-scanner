@@ -1,112 +1,75 @@
 // ignore_for_file: prefer_is_empty, implementation_imports, depend_on_referenced_packages
-import 'package:docs_scanner/components/image_filters_component.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:docs_scanner/providers/state_providers.dart';
+import 'package:docs_scanner/screens/croping_screen.dart';
 import 'package:docs_scanner/screens/cameras_screen.dart';
 import 'package:docs_scanner/components/blankfile.dart';
 import 'package:camera/src/camera_controller.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/image_filters_names.dart';
-import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'dart:io';
 
-class Home extends StatefulWidget {
-  const Home({super.key, required this.controller});
+class CreatePdf extends StatefulWidget {
+  const CreatePdf({super.key, required this.controller});
   final CameraController controller;
 
   @override
-  State<Home> createState() => _HomeState();
+  State<CreatePdf> createState() => _CreatePdfState();
 }
 
-class _HomeState extends State<Home> {
+class _CreatePdfState extends State<CreatePdf> {
   var filterIndex = 0;
   List<XFile> allSelectedImages = [];
 
+  // final List<CroppedFile> croppedImages = [];
+
+  // *Pick images from camera
   void pickImagesFromCamera() async {
-    List<XFile> newImages = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CameraScreen(
           controller: widget.controller,
           onImagesTaken: (images) {
-            setState(() {
-              allSelectedImages.addAll(images);
-            });
+            cropAndSaveImages(images);
           },
         ),
       ),
     );
-    if (newImages.isNotEmpty) {
-      setState(() {
-        allSelectedImages.addAll(newImages);
-      });
-    }
   }
 
+  // *Pick images from Galary
   void pickImagesFromGallery() async {
     final ImagePicker picker = ImagePicker();
     final List<XFile> images = await picker.pickMultiImage();
     if (images.isNotEmpty) {
-      setState(() {
-        allSelectedImages.addAll(images);
-      });
+      cropAndSaveImages(images);
     }
   }
 
-  Future<Uint8List> buildPdf(PdfPageFormat format, value) async {
-    // Create the Pdf document
-    final pw.Document pdf = pw.Document();
-    final List<String> images =
-        value.selectedImages.map((image) => image.path).toList();
-
-    // Calculate the maximum height of the content on a single page
-    final double maxHeight = format.availableHeight - 40; // Adjust as needed
-
-    // Add pages with images
-    for (int i = 0; i < images.length; i++) {
-      final imageFile = File(images[i]);
-      if (!imageFile.existsSync()) continue;
-      final imageProvider = pw.MemoryImage(imageFile.readAsBytesSync());
-
-      // Calculate the height of the image
-      final img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
-      final double imageHeight =
-          image!.height.toDouble() * format.width / image.width.toDouble();
-
-      // Check if the image fits on the current page
-      if (imageHeight > maxHeight) {
-        // Add a new page
-        pdf.addPage(
-          pw.Page(
-            pageFormat: format,
-            build: (pw.Context context) {
-              return pw.Center(
-                child: pw.Image(imageProvider),
-              );
-            },
+// *Crop images
+  Future<void> cropAndSaveImages(List<XFile> images) async {
+    for (XFile image in images) {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Image',
+            toolbarColor: Colors.deepPurpleAccent,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: false,
           ),
-        );
-      } else {
-        // Add the image to the current page
-        pdf.addPage(
-          pw.Page(
-            pageFormat: format,
-            build: (pw.Context context) {
-              return pw.Center(
-                child: pw.Image(imageProvider),
-              );
-            },
-          ),
-        );
+        ],
+      );
+      if (croppedFile != null) {
+        setState(() {
+          allSelectedImages.add(XFile(croppedFile.path));
+        });
       }
     }
-
-    // Build and return the final Pdf file data
-    return await pdf.save();
   }
 
   void deleteImage(int index, value) {
@@ -126,8 +89,11 @@ class _HomeState extends State<Home> {
       builder: (context, value, child) {
         return Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios)),
             title: const Text(
-              "Solid Scanner",
+              "Create PDF",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -148,6 +114,7 @@ class _HomeState extends State<Home> {
                         height: 200,
                         width: MediaQuery.of(context).size.width,
                         child: Container(
+                          color: Colors.white,
                           child: Column(
                             children: [
                               SizedBox(
@@ -156,46 +123,57 @@ class _HomeState extends State<Home> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    FloatingActionButton(
-                                      heroTag: "btn1",
-                                      child: const Icon(Icons.camera),
-                                      onPressed: () {
-                                        pickImagesFromCamera();
-                                      },
+                                    Column(
+                                      children: [
+                                        FloatingActionButton(
+                                          elevation: 0.0,
+                                          heroTag: "btn1",
+                                          child: const Icon(Icons.camera),
+                                          onPressed: () {
+                                            pickImagesFromCamera();
+                                          },
+                                        ),
+                                        const SizedBox(height: 10.0),
+                                        const Text(
+                                          "Capture images",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(
                                       height: 10.0,
                                     ),
-                                    FloatingActionButton(
-                                      heroTag: "btn2",
-                                      child: const Icon(Icons.photo),
-                                      onPressed: () async {
-                                        pickImagesFromGallery();
-                                      },
+                                    Column(
+                                      children: [
+                                        FloatingActionButton(
+                                          elevation: 0.0,
+                                          heroTag: "btn2",
+                                          child: const Icon(Icons.photo),
+                                          onPressed: () async {
+                                            pickImagesFromGallery();
+                                          },
+                                        ),
+                                        const SizedBox(height: 10.0),
+                                        const Text(
+                                          "Choose from device",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
-                              allSelectedImages.length > 0
-                                  ? const ImageFiltersButtons()
-                                  : const SizedBox(),
-                              allSelectedImages.length > 0
-                                  ? ElevatedButton(
-                                      style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all(
-                                                Colors.black),
-                                      ),
-                                      onPressed: () {},
-                                      child: const Text(
-                                        "Proceed next",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    )
-                                  : const SizedBox(),
+                              // *Color filter
+                              // allSelectedImages.length > 0
+                              //     ? const ImageFiltersButtons()
+                              //     : const SizedBox(),
+                              // *Color filter
                             ],
                           ),
                         ),
@@ -203,7 +181,14 @@ class _HomeState extends State<Home> {
                       allSelectedImages.length == 0
                           ? const BlankFileComponent()
                           : Expanded(
-                              child: ListView.builder(
+                              child: GridView.builder(
+                                gridDelegate:
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 200,
+                                  mainAxisSpacing: 10,
+                                  crossAxisSpacing: 10,
+                                  childAspectRatio: 1,
+                                ),
                                 itemCount: allSelectedImages.length,
                                 itemBuilder: (context, index) {
                                   return FutureBuilder(
@@ -215,6 +200,7 @@ class _HomeState extends State<Home> {
                                           snapshot.hasData) {
                                         return Container(
                                           padding: const EdgeInsets.all(10),
+                                          // color: Colors.green,
                                           child: Column(
                                             children: [
                                               Positioned(
@@ -231,10 +217,11 @@ class _HomeState extends State<Home> {
                                                       shape: BoxShape.circle,
                                                     ),
                                                     padding:
-                                                        const EdgeInsets.all(5),
+                                                        const EdgeInsets.all(2),
                                                     child: const Icon(
                                                       Icons.close,
                                                       color: Colors.white,
+                                                      size: 20,
                                                     ),
                                                   ),
                                                 ),
@@ -252,9 +239,12 @@ class _HomeState extends State<Home> {
                                                           value.filterIndex],
                                                     ),
                                                   ),
+                                                  // *Captured images
                                                   child: Image.memory(
+                                                    height: 100,
+                                                    width: 200,
                                                     snapshot.data!,
-                                                    fit: BoxFit.cover,
+                                                    fit: BoxFit.fitWidth,
                                                   ),
                                                 ),
                                               ),
@@ -289,6 +279,39 @@ class _HomeState extends State<Home> {
                                 },
                               ),
                             ),
+                      allSelectedImages.length > 0
+                          ? ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  fixedSize: const Size(200, 30)),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CroppingScreen(
+                                      allSelectedImages: allSelectedImages,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Proceed next",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox(),
                     ],
                   ),
                 ),

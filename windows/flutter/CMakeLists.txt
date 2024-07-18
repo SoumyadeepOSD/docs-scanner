@@ -1,7 +1,10 @@
-# This file controls Flutter-level build steps. It should not be edited.
 cmake_minimum_required(VERSION 3.14)
 
 set(EPHEMERAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ephemeral")
+
+if(NOT EXISTS "${EPHEMERAL_DIR}/generated_config.cmake")
+  message(FATAL_ERROR "The file ${EPHEMERAL_DIR}/generated_config.cmake does not exist.")
+endif()
 
 # Configuration provided via flutter tool.
 include(${EPHEMERAL_DIR}/generated_config.cmake)
@@ -55,7 +58,7 @@ add_library(flutter_wrapper_plugin STATIC
   ${CPP_WRAPPER_SOURCES_CORE}
   ${CPP_WRAPPER_SOURCES_PLUGIN}
 )
-apply_standard_settings(flutter_wrapper_plugin)
+# apply_standard_settings(flutter_wrapper_plugin)  # Commented out
 set_target_properties(flutter_wrapper_plugin PROPERTIES
   POSITION_INDEPENDENT_CODE ON)
 set_target_properties(flutter_wrapper_plugin PROPERTIES
@@ -71,7 +74,7 @@ add_library(flutter_wrapper_app STATIC
   ${CPP_WRAPPER_SOURCES_CORE}
   ${CPP_WRAPPER_SOURCES_APP}
 )
-apply_standard_settings(flutter_wrapper_app)
+# apply_standard_settings(flutter_wrapper_app)  # Commented out
 target_link_libraries(flutter_wrapper_app PUBLIC flutter)
 target_include_directories(flutter_wrapper_app PUBLIC
   "${WRAPPER_ROOT}/include"
@@ -102,3 +105,5 @@ add_custom_target(flutter_assemble DEPENDS
   ${CPP_WRAPPER_SOURCES_PLUGIN}
   ${CPP_WRAPPER_SOURCES_APP}
 )
+
+include(${EPHEMERAL_DIR}/generated_config.cmake)
